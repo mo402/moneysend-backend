@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: moneysend-backend
+    env: python
+    buildCommand: ""
+    startCommand: python app.py
+    envVars:
+      - key: FLASK_ENV
+        value: development
+    autoDeploy: true

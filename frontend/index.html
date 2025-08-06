@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MoneySend</title>
+
+  <!-- Manifest for PWA -->
+  <link rel="manifest" href="/static/manifest.json">
+  <meta name="theme-color" content="#4CAF50">
+
+  <!-- Icons -->
+  <link rel="icon" href="/static/icons/icon-192.png" type="image/png">
+
+  <!-- Styles -->
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+    }
+
+    nav {
+      background-color: #4CAF50;
+      display: flex;
+      justify-content: space-around;
+      padding: 1em;
+      flex-wrap: wrap;
+    }
+
+    nav button {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1em;
+      padding: 0.5em 1em;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    nav button:hover {
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 5px;
+    }
+
+    .section {
+      display: none;
+      padding: 2em;
+    }
+
+    .active {
+      display: block;
+    }
+
+    input, select, button {
+      display: block;
+      margin: 1em 0;
+      padding: 0.7em;
+      width: 100%;
+      max-width: 400px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+
+    button.primary {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+    }
+
+    @media (max-width: 600px) {
+      nav {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <nav>
+    <button onclick="showSection('home')">🏠 Accueil</button>
+    <button onclick="showSection('login')">🔐 Connexion</button>
+    <button onclick="showSection('register')">📝 Créer un compte</button>
+    <button onclick="showSection('wallet')">👛 Portefeuille</button>
+    <button onclick="showSection('exchange')">💱 Taux de change</button>
+    <button onclick="showSection('referral')">🎁 Parrainage</button>
+    <button onclick="showSection('account')">👤 Mon compte</button>
+  </nav>
+
+  <section id="home" class="section active">
+    <h2>Bienvenue sur MoneySend</h2>
+    <p>Gérez vos envois d'argent en toute simplicité.</p>
+  </section>
+
+  <section id="login" class="section">
+    <h2>Connexion</h2>
+    <input id="username" placeholder="Nom d'utilisateur">
+    <input id="password" placeholder="Mot de passe" type="password">
+    <button class="primary" onclick="login()">Connexion</button>
+  </section>
+
+  <section id="register" class="section">
+    <h2>Créer un compte</h2>
+    <input id="new-username" placeholder="Nom d'utilisateur">
+    <input id="new-password" placeholder="Mot de passe" type="password">
+    <button class="primary" onclick="register()">Créer un compte</button>
+  </section>
+
+  <section id="wallet" class="section">
+    <h2>Portefeuille</h2>
+    <p>Votre solde : <strong>0.00 €</strong> (fonctionnalité à connecter)</p>
+  </section>
+
+  <section id="exchange" class="section">
+    <h2>Taux de change</h2>
+    <p>1 EUR = 1.10 USD (exemple statique)</p>
+  </section>
+
+  <section id="referral" class="section">
+    <h2>Parrainage</h2>
+    <p>Invitez vos amis et gagnez des bonus !</p>
+  </section>
+
+  <section id="account" class="section">
+    <h2>Mon compte</h2>
+    <p>Nom d'utilisateur : <strong id="userDisplay">non connecté</strong></p>
+  </section>
+
+  <script>
+    let token = "";
+
+    function showSection(id) {
+      document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    async function login() {
+      const res = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: document.getElementById("username").value,
+          password: document.getElementById("password").value
+        })
+      });
+      const data = await res.json();
+      if (data.token) {
+        token = data.token;
+        alert("Connecté !");
+        document.getElementById("userDisplay").innerText = document.getElementById("username").value;
+        showSection('account');
+      } else {
+        alert("Échec de connexion");
+      }
+    }
+
+    async function register() {
+      const res = await fetch("/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          username: document.getElementById("new-username").value,
+          password: document.getElementById("new-password").value
+        })
+      });
+      const data = await res.json();
+      alert(data.message || "Compte créé !");
+    }
+
+    // PWA install
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/sw.js').then(reg => {
+          console.log("Service Worker enregistré !");
+        });
+      });
+    }
+  </script>
+
+</body>
+</html>
