@@ -8,11 +8,8 @@
   <!-- Manifest for PWA -->
   <link rel="manifest" href="/static/manifest.json">
   <meta name="theme-color" content="#4CAF50">
-
-  <!-- Icons -->
   <link rel="icon" href="/static/icons/icon-192.png" type="image/png">
 
-  <!-- Styles -->
   <style>
     body {
       margin: 0;
@@ -114,7 +111,14 @@
 
   <section id="exchange" class="section">
     <h2>Taux de change</h2>
-    <p>1 EUR = 1.10 USD (exemple statique)</p>
+    <label>Montant :</label>
+    <input type="number" id="amount" placeholder="Montant à convertir">
+    <label>De :</label>
+    <select id="fromCurrency"></select>
+    <label>Vers :</label>
+    <select id="toCurrency"></select>
+    <button class="primary" onclick="convert()">Convertir</button>
+    <p id="conversionResult"></p>
   </section>
 
   <section id="referral" class="section">
@@ -129,6 +133,24 @@
 
   <script>
     let token = "";
+    let exchangeRates = {
+      "EUR": 1.0,
+      "USD": 1.10,
+      "GBP": 0.85,
+      "CAD": 1.47,
+      "JPY": 155.33,
+      "CNY": 7.96,
+      "XOF": 655.957,
+      "NGN": 890.00,
+      "MAD": 10.85,
+      "DZD": 146.32,
+      "XAF": 655.957,
+      "CHF": 0.96,
+      "INR": 90.12,
+      "BRL": 5.30,
+      "AUD": 1.63,
+      "ZAR": 19.00
+    };
 
     function showSection(id) {
       document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
@@ -156,7 +178,7 @@
     }
 
     async function register() {
-      const res = await fetch("/register", {
+      const res = await fetch("https://moneysend.onrender.com/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -168,7 +190,49 @@
       alert(data.message || "Compte créé !");
     }
 
-    // PWA install
+    function populateCurrencies() {
+      const fromSelect = document.getElementById("fromCurrency");
+      const toSelect = document.getElementById("toCurrency");
+
+      Object.keys(exchangeRates).forEach(code => {
+        const opt1 = document.createElement("option");
+        const opt2 = document.createElement("option");
+        opt1.value = opt2.value = code;
+        opt1.text = opt2.text = code;
+        fromSelect.appendChild(opt1);
+        toSelect.appendChild(opt2);
+      });
+
+      fromSelect.value = "EUR";
+      toSelect.value = "USD";
+    }
+
+    function convert() {
+      const amount = parseFloat(document.getElementById("amount").value);
+      const from = document.getElementById("fromCurrency").value;
+      const to = document.getElementById("toCurrency").value;
+
+      if (!exchangeRates[from] || !exchangeRates[to] || isNaN(amount)) {
+        document.getElementById("conversionResult").innerText = "Conversion invalide.";
+        return;
+      }
+
+      const eurAmount = amount / exchangeRates[from]; // conversion en EUR
+      const rawRate = exchangeRates[to];
+      const adjustedRate = rawRate * 0.98; // 2% de commission
+
+      const converted = eurAmount * adjustedRate;
+      const withoutCommission = eurAmount * rawRate;
+      const commission = withoutCommission - converted;
+
+      document.getElementById("conversionResult").innerHTML = `
+        ${amount} ${from} = <strong>${converted.toFixed(2)} ${to}</strong><br>
+        <small>Taux réel : 1 ${from} = ${(rawRate / exchangeRates[from]).toFixed(4)} ${to}</small><br>
+        <small>Taux appliqué (avec 2% de commission) : ${(adjustedRate / exchangeRates[from]).toFixed(4)} ${to}</small><br>
+        <small>Commission prélevée : ${commission.toFixed(2)} ${to}</small>
+      `;
+    }
+
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/static/sw.js').then(reg => {
@@ -176,7 +240,8 @@
         });
       });
     }
-  </script>
 
+    window.onload = populateCurrencies;
+  </script>
 </body>
 </html>

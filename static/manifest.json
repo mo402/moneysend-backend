@@ -5,6 +5,8 @@
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#4CAF50",
+  "orientation": "portrait",
+  "description": "Envoyez de l'argent à votre famille, à vos proches, et à vos amis,facilement, rapidement et en toute sécurité.",
   "icons": [
     {
       "src": "/static/icons/icon-192.png",
